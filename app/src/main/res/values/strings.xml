@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_launcher_name">Contacts</string>
+    <string name="contacts_header_title">Contacts</string>
+    <string name="last_name">Last name</string>
+    <string name="phone_number">Phone number</string>
+    <string name="show_optional_fields">Show optional fields</string>
+    <string name="hide_optional_fields">Hide optional fields</string>
+    <string name="address_line_1">Address line 1</string>
+    <string name="address_line_2">Address line 2</string>
+    <string name="zip_code">Zip code</string>
     <string name="address">Address</string>
     <string name="street">Street</string>
     <string name="neighborhood">Appartment or suite number</string>

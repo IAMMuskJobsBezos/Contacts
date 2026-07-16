@@ -32,6 +32,7 @@ class InsertOrEditContactActivity : SimpleActivity(), RefreshContactsListener {
     }
 
     private var isSelectContactIntent = false
+    private var skippedPickerToNewContact = false
     private var specialMimeType: String? = null
 
     override var isSearchBarEnabled = true
@@ -45,9 +46,22 @@ class InsertOrEditContactActivity : SimpleActivity(), RefreshContactsListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        isSelectContactIntent = intent.action == Intent.ACTION_PICK
+
+        // elderly spec (contacts-app-spec/10-edit-contact.md): the insert-or-edit picker is bypassed -
+        // go straight to the New Contact screen with the number pre-filled. ACTION_PICK keeps the stock picker.
+        if (!isSelectContactIntent) {
+            if (savedInstanceState == null) {
+                skippedPickerToNewContact = true
+                createNewContact()
+            } else {
+                finish()
+            }
+            return
+        }
+
         setContentView(binding.root)
         setupOptionsMenu()
-        isSelectContactIntent = intent.action == Intent.ACTION_PICK
         setupEdgeToEdge(
             padBottomImeAndSystem = listOf(binding.insertEditTabsHolder),
         )
@@ -122,6 +136,10 @@ class InsertOrEditContactActivity : SimpleActivity(), RefreshContactsListener {
         super.onActivityResult(requestCode, resultCode, resultData)
         if (resultCode == Activity.RESULT_OK) {
             hideKeyboard()
+            setResult(Activity.RESULT_OK)
+            finish()
+        } else if (skippedPickerToNewContact) {
+            // there is no picker UI to fall back to, so a cancelled New Contact screen closes this activity too
             finish()
         }
     }
@@ -331,7 +349,7 @@ class InsertOrEditContactActivity : SimpleActivity(), RefreshContactsListener {
         val phoneNumber = getPhoneNumberFromIntent(intent) ?: ""
         val email = getEmailFromIntent(intent) ?: ""
 
-        Intent().apply {
+        Intent(applicationContext, EditContactActivity::class.java).apply {
             action = Intent.ACTION_INSERT
             data = ContactsContract.Contacts.CONTENT_URI
 
