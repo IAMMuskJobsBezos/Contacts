@@ -9,6 +9,11 @@
     <string name="address_line_1">Address line 1</string>
     <string name="address_line_2">Address line 2</string>
     <string name="zip_code">Zip code</string>
+    <string name="call_911_title">Call 911?</string>
+    <string name="message">Message</string>
+    <string name="edit_contact">Edit contact</string>
+    <string name="phone_number_label">Phone number:</string>
+    <string name="email_label">Email:</string>
     <string name="address">Address</string>
     <string name="street">Street</string>
     <string name="neighborhood">Appartment or suite number</string>

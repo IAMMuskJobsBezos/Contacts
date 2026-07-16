@@ -22,7 +22,6 @@ import androidx.core.widget.doAfterTextChanged
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
-import org.fossify.commons.dialogs.CallConfirmationDialog
 import org.fossify.commons.dialogs.RadioGroupDialog
 import org.fossify.commons.extensions.adjustAlpha
 import org.fossify.commons.extensions.applyColorFilter
@@ -72,7 +71,7 @@ import org.fossify.contacts.R
 import org.fossify.contacts.databinding.ActivityEditContactBinding
 import org.fossify.contacts.extensions.config
 import org.fossify.contacts.extensions.getCachePhotoUri
-import org.fossify.contacts.extensions.startCallIntent
+import org.fossify.contacts.extensions.viewContact
 import org.fossify.contacts.helpers.ADD_NEW_CONTACT_NUMBER
 import org.fossify.contacts.helpers.IS_FROM_SIMPLE_CONTACTS
 import org.fossify.contacts.helpers.KEY_EMAIL
@@ -91,7 +90,6 @@ class EditContactActivity : ContactActivity() {
         private const val REMOVE_PHOTO = 3
 
         private const val OPTIONAL_FIELDS_EXPANDED = "optional_fields_expanded"
-        private const val EMERGENCY_NUMBER = "911"
 
         // experiment (2026-07-16): while the optional-fields toggle is pinned, a background-colored
         // backdrop strip pins with it so scrolling content disappears beneath the pill's zone
@@ -126,7 +124,7 @@ class EditContactActivity : ContactActivity() {
             padTopSystem = listOf(binding.contactsHeader.root),
             padBottomImeAndSystem = listOf(binding.contactScrollview)
         )
-        setupHeader()
+        setupContactsHeader(binding.contactsHeader)
         setupButtons()
 
         val action = intent.action
@@ -172,22 +170,6 @@ class EditContactActivity : ContactActivity() {
             when (requestCode) {
                 INTENT_TAKE_PHOTO, INTENT_CHOOSE_PHOTO -> startCropPhotoIntent(lastPhotoIntentUri, resultData?.data)
                 INTENT_CROP_PHOTO -> loadAvatar(lastPhotoIntentUri.toString())
-            }
-        }
-    }
-
-    private fun setupHeader() {
-        binding.contactsHeader.apply {
-            headerLabel.setTextColor(getProperTextColor())
-            val emergencyColor = resources.getColor(org.fossify.commons.R.color.md_red_700, theme)
-            val emergencyContrast = emergencyColor.getContrastColor()
-            emergencyButton.background.applyColorFilter(emergencyColor)
-            emergencyIcon.applyColorFilter(emergencyContrast)
-            emergencyLabel.setTextColor(emergencyContrast)
-            emergencyButton.setOnClickListener {
-                CallConfirmationDialog(this@EditContactActivity, EMERGENCY_NUMBER) {
-                    startCallIntent(EMERGENCY_NUMBER)
-                }
             }
         }
     }
@@ -551,17 +533,49 @@ class EditContactActivity : ContactActivity() {
             if (deleteCurrentContact) {
                 contact!!.source = originalContactSource
                 ContactsHelper(this).deleteContact(contact!!, false) {
-                    setResult(Activity.RESULT_OK)
-                    hideKeyboard()
-                    finish()
+                    finishSaved(openSavedContact = true)
                 }
             } else {
-                setResult(Activity.RESULT_OK)
-                hideKeyboard()
-                finish()
+                finishSaved(openSavedContact = true)
             }
         } else {
             toast(org.fossify.commons.R.string.unknown_error_occurred)
+        }
+    }
+
+    // after a save the user lands on the contact's view screen - unless this edit was opened
+    // FROM that screen, which refreshes itself in onResume when we return to it
+    private fun finishSaved(openSavedContact: Boolean) {
+        setResult(Activity.RESULT_OK)
+        hideKeyboard()
+
+        if (intent.getBooleanExtra(LAUNCHED_FROM_VIEW_CONTACT, false)) {
+            finish()
+            return
+        }
+
+        if (!openSavedContact && contact!!.id != 0) {
+            runOnUiThread {
+                viewContact(contact!!)
+                finish()
+            }
+            return
+        }
+
+        // a freshly inserted contact has no id on our side - look it up by what was just saved
+        val savedFirstName = contact!!.firstName
+        val savedSurname = contact!!.surname
+        val savedNumber = contact!!.phoneNumbers.firstOrNull()?.normalizedNumber
+        ContactsHelper(this).getContacts { contacts ->
+            val saved = contacts.filter {
+                it.firstName == savedFirstName && it.surname == savedSurname &&
+                    (savedNumber == null || it.phoneNumbers.any { number -> number.normalizedNumber == savedNumber })
+            }.maxByOrNull { it.id }
+
+            if (saved != null) {
+                viewContact(saved)
+            }
+            finish()
         }
     }
 
@@ -571,14 +585,10 @@ class EditContactActivity : ContactActivity() {
             val status = getPrimaryNumberStatus(primaryState.first, primaryState.second)
             if (status != PrimaryNumberStatus.UNCHANGED) {
                 updateDefaultNumberForDuplicateContacts(primaryState, status) {
-                    setResult(Activity.RESULT_OK)
-                    hideKeyboard()
-                    finish()
+                    finishSaved(openSavedContact = false)
                 }
             } else {
-                setResult(Activity.RESULT_OK)
-                hideKeyboard()
-                finish()
+                finishSaved(openSavedContact = false)
             }
         } else {
             toast(org.fossify.commons.R.string.unknown_error_occurred)

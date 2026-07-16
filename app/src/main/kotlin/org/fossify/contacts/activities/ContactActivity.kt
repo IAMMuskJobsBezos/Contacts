@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
@@ -25,31 +26,109 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target
+import android.content.res.ColorStateList
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.StateListDrawable
 import org.fossify.commons.dialogs.ConfirmationDialog
 import org.fossify.commons.dialogs.RadioGroupDialog
+import org.fossify.commons.extensions.applyColorFilter
 import org.fossify.commons.extensions.beGone
 import org.fossify.commons.extensions.beVisible
+import org.fossify.commons.extensions.getAlertDialogBuilder
 import org.fossify.commons.extensions.getContrastColor
 import org.fossify.commons.extensions.getNameLetter
 import org.fossify.commons.extensions.getProperBackgroundColor
+import org.fossify.commons.extensions.getProperPrimaryColor
+import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.insetsController
 import org.fossify.commons.extensions.launchSendSMSIntent
 import org.fossify.commons.extensions.realScreenSize
 import org.fossify.commons.extensions.sendEmailIntent
 import org.fossify.commons.extensions.setNavigationBarAppearance
+import org.fossify.commons.extensions.setupDialogStuff
 import org.fossify.commons.extensions.showErrorToast
 import org.fossify.commons.helpers.ContactsHelper
 import org.fossify.commons.helpers.letterBackgroundColors
 import org.fossify.commons.models.RadioItem
 import org.fossify.commons.models.contacts.Contact
 import org.fossify.contacts.R
+import org.fossify.contacts.databinding.DialogCall911Binding
+import org.fossify.contacts.databinding.ViewContactsHeaderBinding
 import org.fossify.contacts.extensions.shareContacts
+import org.fossify.contacts.extensions.startCallIntent
 
 abstract class ContactActivity : SimpleActivity() {
     companion object {
         protected const val PICK_RINGTONE_INTENT_ID = 1500
         protected const val INTENT_SELECT_RINGTONE = 600
+        protected const val EMERGENCY_NUMBER = "911"
+        const val LAUNCHED_FROM_VIEW_CONTACT = "launched_from_view_contact"
     }
+
+    // shared "Contacts" header band with the emergency 911 pill (view_contacts_header.xml)
+    fun setupContactsHeader(header: ViewContactsHeaderBinding) {
+        header.headerLabel.setTextColor(getProperTextColor())
+        val emergencyColor = resources.getColor(org.fossify.commons.R.color.md_red_700, theme)
+        val emergencyContrast = emergencyColor.getContrastColor()
+        header.emergencyButton.background.applyColorFilter(emergencyColor)
+        header.emergencyIcon.applyColorFilter(emergencyContrast)
+        header.emergencyLabel.setTextColor(emergencyContrast)
+        header.emergencyButton.setOnClickListener {
+            showEmergencyCallDialog()
+        }
+    }
+
+    // "Call 911?" with No (outlined, fills while pressed) and Yes (filled, outlines while
+    // pressed) in the primary color with white as the counterpart - user spec 2026-07-16.
+    // Built in code because the primary color is dynamic.
+    private fun showEmergencyCallDialog() {
+        val binding = DialogCall911Binding.inflate(layoutInflater)
+        val primaryColor = getProperPrimaryColor()
+        val primaryContrast = primaryColor.getContrastColor()
+
+        val outlined = { makeDialogButtonDrawable(fillColor = Color.WHITE, strokeColor = primaryColor) }
+        val filled = { makeDialogButtonDrawable(fillColor = primaryColor, strokeColor = null) }
+
+        binding.dialogCallNo.background = StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_pressed), filled())
+            addState(intArrayOf(), outlined())
+        }
+        binding.dialogCallNo.setTextColor(pressedColorStateList(pressed = primaryContrast, default = primaryColor))
+
+        binding.dialogCallYes.background = StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_pressed), outlined())
+            addState(intArrayOf(), filled())
+        }
+        binding.dialogCallYes.setTextColor(pressedColorStateList(pressed = primaryColor, default = primaryContrast))
+
+        getAlertDialogBuilder().apply {
+            setupDialogStuff(binding.root, this) { dialog ->
+                binding.dialogCallNo.setOnClickListener {
+                    dialog.dismiss()
+                }
+                binding.dialogCallYes.setOnClickListener {
+                    dialog.dismiss()
+                    startCallIntent(EMERGENCY_NUMBER)
+                }
+            }
+        }
+    }
+
+    private fun makeDialogButtonDrawable(fillColor: Int, strokeColor: Int?): GradientDrawable {
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = 12 * resources.displayMetrics.density
+            setColor(fillColor)
+            if (strokeColor != null) {
+                setStroke((2 * resources.displayMetrics.density).toInt(), strokeColor)
+            }
+        }
+    }
+
+    private fun pressedColorStateList(pressed: Int, default: Int) = ColorStateList(
+        arrayOf(intArrayOf(android.R.attr.state_pressed), intArrayOf()),
+        intArrayOf(pressed, default)
+    )
 
     protected var contact: Contact? = null
     protected var originalRingtone: String? = null
