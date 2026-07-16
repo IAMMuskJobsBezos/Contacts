@@ -12,6 +12,128 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
+    <LinearLayout
+        android:id="@+id/contact_fixed_top"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/contact_photo"
+            android:layout_width="@dimen/edit_contact_avatar_size"
+            android:layout_height="@dimen/edit_contact_avatar_size"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/normal_margin"
+            android:contentDescription="@string/change_photo"
+            android:src="@drawable/avatar_placeholder" />
+
+        <org.fossify.commons.views.MyTextView
+            android:id="@+id/contact_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/bigger_margin"
+            android:gravity="center"
+            android:textSize="@dimen/edit_contact_title_size"
+            tools:text="@string/new_contact" />
+
+        <View
+            android:id="@+id/contact_buttons_top_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="@dimen/big_margin"
+            android:background="@color/divider_grey" />
+
+        <LinearLayout
+            android:id="@+id/contact_buttons_holder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/activity_margin"
+            android:layout_marginTop="@dimen/bigger_margin"
+            android:layout_marginEnd="@dimen/activity_margin"
+            android:layout_marginBottom="@dimen/bigger_margin"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/contact_cancel_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/button_cancel_background"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingTop="@dimen/normal_margin"
+                android:paddingBottom="@dimen/normal_margin">
+
+                <ImageView
+                    android:id="@+id/contact_cancel_icon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="@dimen/medium_margin"
+                    android:contentDescription="@null"
+                    android:duplicateParentState="true"
+                    android:src="@drawable/ic_cross_vector"
+                    android:tint="@color/button_cancel_content"
+                    tools:ignore="UseAppTint" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/contact_cancel_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:duplicateParentState="true"
+                    android:text="@string/cancel"
+                    android:textColor="@color/button_cancel_content"
+                    android:textSize="19sp" />
+            </LinearLayout>
+
+            <Space
+                android:layout_width="@dimen/big_margin"
+                android:layout_height="1dp" />
+
+            <LinearLayout
+                android:id="@+id/contact_save_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/button_save_background"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingTop="@dimen/normal_margin"
+                android:paddingBottom="@dimen/normal_margin">
+
+                <ImageView
+                    android:id="@+id/contact_save_icon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="@dimen/medium_margin"
+                    android:contentDescription="@null"
+                    android:duplicateParentState="true"
+                    android:src="@drawable/ic_check_vector"
+                    android:tint="@color/button_save_content"
+                    tools:ignore="UseAppTint" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/contact_save_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:duplicateParentState="true"
+                    android:text="@string/save"
+                    android:textColor="@color/button_save_content"
+                    android:textSize="19sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <View
+            android:id="@+id/contact_buttons_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/divider_grey" />
+    </LinearLayout>
+
     <ScrollView
         android:id="@+id/contact_scrollview"
         android:layout_width="match_parent"
@@ -31,109 +153,21 @@
             android:paddingEnd="@dimen/activity_margin"
             android:paddingBottom="@dimen/section_margin">
 
-            <ImageView
-                android:id="@+id/contact_photo"
-                android:layout_width="@dimen/edit_contact_avatar_size"
-                android:layout_height="@dimen/edit_contact_avatar_size"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="@dimen/normal_margin"
-                android:contentDescription="@string/change_photo"
-                android:src="@drawable/avatar_placeholder" />
-
-            <org.fossify.commons.views.MyTextView
-                android:id="@+id/contact_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/bigger_margin"
-                android:gravity="center"
-                android:textSize="@dimen/edit_contact_title_size"
-                tools:text="@string/new_contact" />
-
-            <LinearLayout
-                android:id="@+id/contact_buttons_holder"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/big_margin"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:id="@+id/contact_cancel_button"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="@drawable/button_rounded_rect_background"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:orientation="horizontal"
-                    android:paddingTop="@dimen/normal_margin"
-                    android:paddingBottom="@dimen/normal_margin">
-
-                    <ImageView
-                        android:id="@+id/contact_cancel_icon"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_marginEnd="@dimen/medium_margin"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_cross_vector" />
-
-                    <org.fossify.commons.views.MyTextView
-                        android:id="@+id/contact_cancel_label"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/cancel"
-                        android:textSize="@dimen/big_text_size" />
-                </LinearLayout>
-
-                <Space
-                    android:layout_width="@dimen/big_margin"
-                    android:layout_height="1dp" />
-
-                <LinearLayout
-                    android:id="@+id/contact_save_button"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="@drawable/button_rounded_rect_background"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:orientation="horizontal"
-                    android:paddingTop="@dimen/normal_margin"
-                    android:paddingBottom="@dimen/normal_margin">
-
-                    <ImageView
-                        android:id="@+id/contact_save_icon"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_marginEnd="@dimen/medium_margin"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_check_vector" />
-
-                    <org.fossify.commons.views.MyTextView
-                        android:id="@+id/contact_save_label"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/save"
-                        android:textSize="@dimen/big_text_size" />
-                </LinearLayout>
-            </LinearLayout>
-
             <View
-                android:id="@+id/contact_buttons_divider"
+                android:id="@+id/contact_toggle_backdrop"
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="@dimen/big_margin"
-                android:background="@color/divider_grey" />
+                android:layout_height="64dp"
+                android:layout_marginBottom="-64dp"
+                android:visibility="invisible" />
 
             <org.fossify.commons.views.MyEditText
                 android:id="@+id/contact_first_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/section_margin"
+                android:layout_marginTop="@dimen/big_margin"
                 android:hint="@string/first_name"
                 android:inputType="textCapWords"
+                android:maxLength="20"
                 android:maxLines="1"
                 android:singleLine="true"
                 android:textCursorDrawable="@null"
@@ -146,6 +180,7 @@
                 android:layout_marginTop="@dimen/section_margin"
                 android:hint="@string/last_name"
                 android:inputType="textCapWords"
+                android:maxLength="20"
                 android:maxLines="1"
                 android:singleLine="true"
                 android:textCursorDrawable="@null"
@@ -174,9 +209,9 @@
                 android:focusable="true"
                 android:gravity="center"
                 android:orientation="horizontal"
-                android:paddingStart="@dimen/bigger_margin"
+                android:paddingStart="26dp"
                 android:paddingTop="@dimen/normal_margin"
-                android:paddingEnd="@dimen/bigger_margin"
+                android:paddingEnd="26dp"
                 android:paddingBottom="@dimen/normal_margin">
 
                 <ImageView

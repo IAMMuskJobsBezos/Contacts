@@ -16,6 +16,9 @@ import android.provider.ContactsContract.CommonDataKinds.StructuredPostal
 import android.provider.ContactsContract.CommonDataKinds.Website
 import android.provider.MediaStore
 import android.telephony.PhoneNumberUtils
+import android.view.View
+import androidx.core.graphics.ColorUtils
+import androidx.core.widget.doAfterTextChanged
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
@@ -32,7 +35,6 @@ import org.fossify.commons.extensions.getContrastColor
 import org.fossify.commons.extensions.getEmptyContact
 import org.fossify.commons.extensions.getLookupUriRawId
 import org.fossify.commons.extensions.getProperBackgroundColor
-import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.getVisibleContactSources
 import org.fossify.commons.extensions.hasContactPermissions
@@ -90,6 +92,11 @@ class EditContactActivity : ContactActivity() {
 
         private const val OPTIONAL_FIELDS_EXPANDED = "optional_fields_expanded"
         private const val EMERGENCY_NUMBER = "911"
+
+        // experiment (2026-07-16): while the optional-fields toggle is pinned, a background-colored
+        // backdrop strip pins with it so scrolling content disappears beneath the pill's zone
+        // instead of showing around it. Flip to false to let content pass visibly beside the pill.
+        private const val PIN_TOGGLE_BLOCKS_CONTENT_BEHIND = true
     }
 
     private var lastPhotoIntentUri: Uri? = null
@@ -97,6 +104,8 @@ class EditContactActivity : ContactActivity() {
     private var isThirdPartyIntent = false
     private var originalContactSource = ""
     private var optionalFieldsExpanded = false
+    private var isTogglePinned = false
+    private var toggleRestingColor = 0
     private val binding by viewBinding(ActivityEditContactBinding::inflate)
 
     enum class PrimaryNumberStatus {
@@ -184,26 +193,53 @@ class EditContactActivity : ContactActivity() {
     }
 
     private fun setupButtons() {
-        val primaryColor = getProperPrimaryColor()
-        val primaryContrast = primaryColor.getContrastColor()
-        binding.contactSaveButton.background.applyColorFilter(primaryColor)
-        binding.contactSaveIcon.applyColorFilter(primaryContrast)
-        binding.contactSaveLabel.setTextColor(primaryContrast)
+        // Cancel/Save colors and the outline-to-fill press states live entirely in
+        // button_cancel_background / button_save_background + their content color selectors
         binding.contactSaveButton.setOnClickListener { saveContact() }
-
-        val cancelColor = resources.getColor(org.fossify.commons.R.color.md_grey_600, theme)
-        val cancelContrast = cancelColor.getContrastColor()
-        binding.contactCancelButton.background.applyColorFilter(cancelColor)
-        binding.contactCancelIcon.applyColorFilter(cancelContrast)
-        binding.contactCancelLabel.setTextColor(cancelContrast)
         binding.contactCancelButton.setOnClickListener {
             hideKeyboard()
             finish()
         }
 
-        binding.contactOptionalToggle.background.applyColorFilter(getProperTextColor().adjustAlpha(0.1f))
+        // opaque composite of the old translucent tint, so the pill fully covers
+        // fields scrolling beneath it while pinned
+        toggleRestingColor = ColorUtils.compositeColors(getProperTextColor().adjustAlpha(0.1f), getProperBackgroundColor())
+        binding.contactOptionalToggle.background.applyColorFilter(toggleRestingColor)
+        binding.contactToggleBackdrop.setBackgroundColor(getProperBackgroundColor())
+        // no outline -> no elevation shadow: the backdrop must hide content, not draw a line
+        binding.contactToggleBackdrop.outlineProvider = null
         binding.contactOptionalToggle.setOnClickListener {
             setOptionalFieldsExpanded(!optionalFieldsExpanded)
+        }
+
+        binding.contactScrollview.setOnScrollChangeListener { _, _, scrollY, _, _ ->
+            updateOptionalTogglePinning(scrollY)
+        }
+    }
+
+    // the toggle scrolls with the list, but pins below the header's bottom divider instead of
+    // leaving the screen; scrolling back down releases it into the list again. The backdrop
+    // strip pins with it so content vanishes under the pill's zone rather than showing beside it.
+    private fun updateOptionalTogglePinning(scrollY: Int) {
+        val toggle = binding.contactOptionalToggle
+        val backdrop = binding.contactToggleBackdrop
+        val pinnedGap = resources.getDimensionPixelSize(org.fossify.commons.R.dimen.normal_margin)
+        val overshoot = scrollY + pinnedGap - toggle.top
+        val shouldPin = overshoot > 0
+        isTogglePinned = shouldPin
+
+        if (shouldPin) {
+            toggle.translationY = overshoot.toFloat()
+            toggle.translationZ = 4 * resources.displayMetrics.density
+            if (PIN_TOGGLE_BLOCKS_CONTENT_BEHIND) {
+                backdrop.translationY = scrollY.toFloat()
+                backdrop.translationZ = 3 * resources.displayMetrics.density
+                backdrop.visibility = View.VISIBLE
+            }
+        } else {
+            toggle.translationY = 0f
+            toggle.translationZ = 0f
+            backdrop.visibility = View.INVISIBLE
         }
     }
 
@@ -297,14 +333,15 @@ class EditContactActivity : ContactActivity() {
     }
 
     private fun setupViews() {
-        binding.contactTitle.text = if (contact!!.id == 0) {
-            getString(R.string.new_contact)
-        } else {
-            contact!!.getNameToDisplay()
-        }
+        // the title sits in the fixed header outside contact_scrollview, so
+        // updateTextColors below does not reach it
+        binding.contactTitle.setTextColor(getProperTextColor())
 
         binding.contactFirstName.setText(contact!!.firstName)
         binding.contactSurname.setText(contact!!.surname)
+        updateContactTitle()
+        binding.contactFirstName.doAfterTextChanged { updateContactTitle() }
+        binding.contactSurname.doAfterTextChanged { updateContactTitle() }
 
         val firstNumber = contact!!.phoneNumbers.firstOrNull()
         binding.contactNumber.setText(firstNumber?.value ?: "")
@@ -332,6 +369,13 @@ class EditContactActivity : ContactActivity() {
         setOptionalFieldsExpanded(optionalFieldsExpanded || hasOptionalData)
 
         updateTextColors(binding.contactScrollview)
+    }
+
+    private fun updateContactTitle() {
+        val name = arrayOf(binding.contactFirstName.value, binding.contactSurname.value)
+            .filter { it.isNotEmpty() }
+            .joinToString(" ")
+        binding.contactTitle.text = name.ifEmpty { getString(R.string.new_contact) }
     }
 
     private fun updateAvatar() {
