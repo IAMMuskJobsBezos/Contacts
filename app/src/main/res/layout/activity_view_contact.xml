@@ -15,7 +15,8 @@
     <ScrollView
         android:id="@+id/contact_scrollview"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:clipToPadding="false"
         android:fillViewport="true"
         android:scrollbars="none"
@@ -247,4 +248,15 @@
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider_grey" />
+
+    <include
+        android:id="@+id/contact_tab_bar"
+        layout="@layout/view_bottom_tab_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 </LinearLayout>

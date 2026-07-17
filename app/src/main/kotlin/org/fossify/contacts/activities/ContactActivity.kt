@@ -69,10 +69,10 @@ abstract class ContactActivity : SimpleActivity() {
     fun setupContactsHeader(header: ViewContactsHeaderBinding) {
         header.headerLabel.setTextColor(getProperTextColor())
         val emergencyColor = resources.getColor(org.fossify.commons.R.color.md_red_700, theme)
-        val emergencyContrast = emergencyColor.getContrastColor()
         header.emergencyButton.background.applyColorFilter(emergencyColor)
-        header.emergencyIcon.applyColorFilter(emergencyContrast)
-        header.emergencyLabel.setTextColor(emergencyContrast)
+        // always white on the red pill - getContrastColor() was picking a dark color here
+        header.emergencyIcon.applyColorFilter(Color.WHITE)
+        header.emergencyLabel.setTextColor(Color.WHITE)
         header.emergencyButton.setOnClickListener {
             showEmergencyCallDialog()
         }

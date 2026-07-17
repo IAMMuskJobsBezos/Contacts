@@ -2,6 +2,11 @@
 <resources>
     <string name="app_launcher_name">Contacts</string>
     <string name="contacts_header_title">Contacts</string>
+    <!-- shared bottom bar (spec: Phone fork's Keypad/Contacts/Recent bar, ported here so the
+         real View Contact screen carries it instead of a Phone-side clone) -->
+    <string name="keypad_tab_label">Keypad</string>
+    <string name="contacts_tab_label">Contacts</string>
+    <string name="recent_tab_label">Recent</string>
     <string name="last_name">Last name</string>
     <string name="phone_number">Phone number</string>
     <string name="show_optional_fields">Show optional fields</string>

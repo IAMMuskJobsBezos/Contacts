@@ -26,6 +26,9 @@
     <queries>
         <package android:name="org.fossify.contacts.debug" />
         <package android:name="org.fossify.contacts" />
+        <!-- the bottom bar's Keypad/Recent taps jump into the Phone fork -->
+        <package android:name="org.fossify.phone" />
+        <package android:name="org.fossify.phone.debug" />
 
         <!-- Required for loading contact accounts -->
         <intent>

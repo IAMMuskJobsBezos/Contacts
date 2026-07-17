@@ -20,8 +20,10 @@ import org.fossify.commons.extensions.getContrastColor
 import org.fossify.commons.extensions.getLookupKeyFromUri
 import org.fossify.commons.extensions.getLookupUriRawId
 import org.fossify.commons.extensions.getProperBackgroundColor
+import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.insetsController
+import org.fossify.commons.extensions.isPackageInstalled
 import org.fossify.commons.extensions.toast
 import org.fossify.commons.extensions.updateTextColors
 import org.fossify.commons.extensions.viewBinding
@@ -36,6 +38,16 @@ import org.fossify.contacts.extensions.callContact
 import org.fossify.contacts.extensions.config
 
 class ViewContactActivity : ContactActivity() {
+    companion object {
+        // must match org.fossify.phone.activities.MainActivity's own EXTRA_TAB + tab indices
+        private const val PHONE_EXTRA_TAB = "extra_tab"
+        private const val PHONE_TAB_KEYPAD = 0
+        private const val PHONE_TAB_CONTACTS = 1
+        private const val PHONE_TAB_RECENTS = 2
+        private const val PHONE_PACKAGE = "org.fossify.phone"
+        private const val PHONE_PACKAGE_DEBUG = "org.fossify.phone.debug"
+    }
+
     private var isViewIntent = false
     private val binding by viewBinding(ActivityViewContactBinding::inflate)
 
@@ -49,15 +61,17 @@ class ViewContactActivity : ContactActivity() {
 
         setupEdgeToEdge(
             padTopSystem = listOf(binding.contactsHeader.root),
-            padBottomSystem = listOf(binding.contactScrollview)
+            padBottomSystem = listOf(binding.contactTabBar.root)
         )
         setupContactsHeader(binding.contactsHeader)
         setupButtons()
+        setupTabBar()
     }
 
     override fun onResume() {
         super.onResume()
         window.insetsController().isAppearanceLightStatusBars = getProperBackgroundColor().getContrastColor() != Color.WHITE
+        setupTabBarColors()
 
         isViewIntent = intent.action == ContactsContract.QuickContact.ACTION_QUICK_CONTACT || intent.action == Intent.ACTION_VIEW
         if (isViewIntent) {
@@ -100,6 +114,58 @@ class ViewContactActivity : ContactActivity() {
                     startActivity(this)
                 }
             }
+        }
+    }
+
+    // jumps into the Phone app on the tapped tab; Contacts app has no launcher tile of its
+    // own, so "Contacts" here also means "back to Phone's contact list" (2026-07-17 plan)
+    private fun setupTabBar() {
+        binding.contactTabBar.apply {
+            tabBarKeypad.setOnClickListener { returnToPhoneTab(PHONE_TAB_KEYPAD) }
+            tabBarContacts.setOnClickListener { returnToPhoneTab(PHONE_TAB_CONTACTS) }
+            tabBarRecents.setOnClickListener { returnToPhoneTab(PHONE_TAB_RECENTS) }
+        }
+    }
+
+    private fun returnToPhoneTab(tab: Int) {
+        val targetPackage = when {
+            isPackageInstalled(PHONE_PACKAGE) -> PHONE_PACKAGE
+            isPackageInstalled(PHONE_PACKAGE_DEBUG) -> PHONE_PACKAGE_DEBUG
+            else -> null
+        }
+
+        if (targetPackage == null) {
+            toast(org.fossify.commons.R.string.no_app_found)
+            return
+        }
+
+        try {
+            // target MainActivity directly (not getLaunchIntentForPackage's launcher intent,
+            // which routes through SplashActivity and would drop this extra along the way)
+            Intent().apply {
+                setClassName(targetPackage, "org.fossify.phone.activities.MainActivity")
+                putExtra(PHONE_EXTRA_TAB, tab)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                startActivity(this)
+            }
+            finish()
+        } catch (e: Exception) {
+            toast(org.fossify.commons.R.string.no_app_found)
+        }
+    }
+
+    // active tab = dark text color, inactive = light primary (matches the Phone fork's bar);
+    // Contacts is always "active" here since this screen only exists inside that context
+    private fun setupTabBarColors() {
+        val textColor = getProperTextColor()
+        val primaryColor = getProperPrimaryColor()
+        binding.contactTabBar.apply {
+            tabBarKeypadIcon.applyColorFilter(primaryColor)
+            tabBarKeypadLabel.setTextColor(primaryColor)
+            tabBarRecentsIcon.applyColorFilter(primaryColor)
+            tabBarRecentsLabel.setTextColor(primaryColor)
+            tabBarContactsIcon.applyColorFilter(textColor)
+            tabBarContactsLabel.setTextColor(textColor)
         }
     }
 
