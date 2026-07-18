@@ -145,7 +145,16 @@ class ViewContactActivity : ContactActivity() {
             Intent().apply {
                 setClassName(targetPackage, "org.fossify.phone.activities.MainActivity")
                 putExtra(PHONE_EXTRA_TAB, tab)
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                // NEW_TASK is required here: this call originates from inside Contacts'
+                // own task, and without it Android embeds a second MainActivity instance
+                // inside THAT task instead of returning to Phone's own task (matched via
+                // taskAffinity) - silently leaving two live MainActivity instances alive,
+                // with taps landing unpredictably on whichever one has focus
+                addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP
+                )
                 startActivity(this)
             }
             finish()
