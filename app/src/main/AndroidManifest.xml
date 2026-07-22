@@ -54,7 +54,8 @@
         <activity
             android:name=".activities.MainActivity"
             android:configChanges="orientation"
-            android:exported="true">
+            android:exported="true"
+            android:screenOrientation="portrait">
 
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -82,7 +83,8 @@
             android:configChanges="orientation"
             android:exported="true"
             android:label="@string/settings"
-            android:parentActivityName=".activities.MainActivity">
+            android:parentActivityName=".activities.MainActivity"
+            android:screenOrientation="portrait">
 
             <intent-filter>
                 <action android:name="android.intent.action.APPLICATION_PREFERENCES" />
@@ -94,7 +96,8 @@
             android:name=".activities.GroupContactsActivity"
             android:configChanges="orientation"
             android:exported="false"
-            android:parentActivityName=".activities.MainActivity" />
+            android:parentActivityName=".activities.MainActivity"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".activities.ViewContactActivity"
@@ -102,6 +105,7 @@
             android:exported="true"
             android:label="@string/details"
             android:parentActivityName=".activities.MainActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/TranslucentTheme">
 
             <intent-filter>
@@ -138,6 +142,7 @@
             android:configChanges="orientation"
             android:exported="true"
             android:parentActivityName=".activities.MainActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/TranslucentTheme"
             android:windowSoftInputMode="adjustResize">
 
@@ -181,7 +186,8 @@
             android:name=".activities.InsertOrEditContactActivity"
             android:configChanges="orientation"
             android:exported="true"
-            android:label="@string/select_contact">
+            android:label="@string/select_contact"
+            android:screenOrientation="portrait">
 
             <intent-filter>
                 <action android:name="android.intent.action.INSERT_OR_EDIT" />
